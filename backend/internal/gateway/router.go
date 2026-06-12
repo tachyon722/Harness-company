@@ -9,6 +9,7 @@ import (
 	"github.com/harness-org/backend/internal/domain/identity"
 	"github.com/harness-org/backend/internal/domain/layer"
 	"github.com/harness-org/backend/internal/domain/organization"
+	"github.com/harness-org/backend/internal/domain/workflow"
 )
 
 type Dependencies struct {
@@ -16,6 +17,7 @@ type Dependencies struct {
 	OrganizationHandler *organization.Handler
 	LayerHandler        *layer.Handler
 	CapabilityHandler   *capability.Handler
+	WorkflowHandler     *workflow.Handler
 }
 
 func RegisterRoutes(r *chi.Mux, deps *Dependencies) {
@@ -33,6 +35,9 @@ func RegisterRoutes(r *chi.Mux, deps *Dependencies) {
 		}
 		if deps.CapabilityHandler != nil {
 			deps.CapabilityHandler.RegisterRoutes(r)
+		}
+		if deps.WorkflowHandler != nil {
+			deps.WorkflowHandler.RegisterRoutes(r)
 		}
 	})
 }

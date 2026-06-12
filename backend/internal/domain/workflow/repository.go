@@ -192,6 +192,23 @@ func (r *Repository) RecordDecision(ctx context.Context, d *Decision) (*Decision
 	return d, nil
 }
 
+func (r *Repository) GetTaskByID(ctx context.Context, id uuid.UUID) (*Task, error) {
+	task := &Task{}
+	var inputJSON, outputJSON []byte
+	err := r.db.QueryRow(ctx,
+		`SELECT id, workflow_id, stage, stage_type, assignee_id, assignee_type, input, output, weight_snapshot, status, created_at, updated_at
+		 FROM tasks WHERE id = $1`, id,
+	).Scan(&task.ID, &task.WorkflowID, &task.Stage, &task.StageType, &task.AssigneeID, &task.AssigneeType, &inputJSON, &outputJSON, &task.WeightSnapshot, &task.Status, &task.CreatedAt, &task.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("get task by id: %w", err)
+	}
+	json.Unmarshal(inputJSON, &task.Input)
+	if outputJSON != nil {
+		json.Unmarshal(outputJSON, &task.Output)
+	}
+	return task, nil
+}
+
 func (r *Repository) GetWorkflowContext(ctx context.Context, workflowID uuid.UUID) (*WorkflowContext, error) {
 	wc := &WorkflowContext{}
 	var memJSON, expJSON []byte
