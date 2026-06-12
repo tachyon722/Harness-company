@@ -69,3 +69,25 @@ type CreateAgentInput struct {
 	PermissionLevel PermissionLevel `json:"permission_level"`
 	Metadata        map[string]any  `json:"metadata,omitempty"`
 }
+
+type UserResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	AvatarURL string    `json:"avatar_url,omitempty"`
+	Roles     []Role    `json:"roles,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func NewUserResponse(u *User) UserResponse {
+	return UserResponse{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		AvatarURL: u.AvatarURL,
+		Roles:     u.Roles,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
