@@ -3,13 +3,14 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
 	ServerPort    int
 	DatabaseURL   string
 	JWTSecret     string
-	CorsOrigins   string
+	CorsOrigins   []string
 }
 
 func Load() *Config {
@@ -17,7 +18,7 @@ func Load() *Config {
 		ServerPort:    getEnvInt("SERVER_PORT", 8080),
 		DatabaseURL:   getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/harness_org?sslmode=disable"),
 		JWTSecret:     getEnv("JWT_SECRET", "dev-secret-change-in-production"),
-		CorsOrigins:   getEnv("CORS_ORIGINS", "http://localhost:3000"),
+		CorsOrigins:   getEnvSlice("CORS_ORIGINS", "http://localhost:3000"),
 	}
 }
 
@@ -35,4 +36,14 @@ func getEnvInt(key string, fallback int) int {
 		}
 	}
 	return fallback
+}
+
+func getEnvSlice(key, fallback string) []string {
+	v := getEnv(key, fallback)
+	parts := strings.Split(v, ",")
+	result := make([]string, len(parts))
+	for i, p := range parts {
+		result[i] = strings.TrimSpace(p)
+	}
+	return result
 }
