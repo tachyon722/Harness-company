@@ -62,6 +62,7 @@ type MVRURelationship struct {
 	TargetMVRUID uuid.UUID      `json:"target_mvru_id"`
 	RelType      string         `json:"rel_type"`
 	Config       map[string]any `json:"config,omitempty"`
+	CreatedAt    time.Time      `json:"created_at"`
 }
 
 type CreateOrganizationInput struct {
