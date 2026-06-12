@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"github.com/harness-org/backend/internal/domain/capability"
+	"github.com/harness-org/backend/internal/domain/governance"
 	"github.com/harness-org/backend/internal/domain/identity"
 	"github.com/harness-org/backend/internal/domain/layer"
+	"github.com/harness-org/backend/internal/domain/observability"
 	"github.com/harness-org/backend/internal/domain/organization"
 	"github.com/harness-org/backend/internal/domain/verification"
 	"github.com/harness-org/backend/internal/domain/workflow"
@@ -61,14 +63,24 @@ func main() {
 	verSvc := verification.NewService(verRepo)
 	verHandler := verification.NewHandler(verSvc)
 
+	obsRepo := observability.NewRepository(db)
+	obsSvc := observability.NewService(obsRepo)
+	obsHandler := observability.NewHandler(obsSvc)
+
+	govRepo := governance.NewRepository(db)
+	govSvc := governance.NewService(govRepo)
+	govHandler := governance.NewHandler(govSvc)
+
 	router := server.NewRouter(cfg.CorsOrigins)
 	gateway.RegisterRoutes(router, &gateway.Dependencies{
-		IdentityHandler:     identHandler,
-		OrganizationHandler: orgHandler,
-		LayerHandler:        layerHandler,
-		CapabilityHandler:   capHandler,
-		WorkflowHandler:     wfHandler,
-		VerificationHandler: verHandler,
+		IdentityHandler:       identHandler,
+		OrganizationHandler:   orgHandler,
+		LayerHandler:          layerHandler,
+		CapabilityHandler:     capHandler,
+		WorkflowHandler:       wfHandler,
+		ObservabilityHandler:  obsHandler,
+		VerificationHandler:   verHandler,
+		GovernanceHandler:     govHandler,
 	})
 
 	srv := server.New(router, cfg.ServerPort)

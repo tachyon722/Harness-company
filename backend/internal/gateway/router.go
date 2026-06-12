@@ -6,20 +6,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/harness-org/backend/internal/domain/capability"
+	"github.com/harness-org/backend/internal/domain/governance"
 	"github.com/harness-org/backend/internal/domain/identity"
 	"github.com/harness-org/backend/internal/domain/layer"
+	"github.com/harness-org/backend/internal/domain/observability"
 	"github.com/harness-org/backend/internal/domain/organization"
 	"github.com/harness-org/backend/internal/domain/verification"
 	"github.com/harness-org/backend/internal/domain/workflow"
 )
 
 type Dependencies struct {
-	IdentityHandler     *identity.Handler
-	OrganizationHandler *organization.Handler
-	LayerHandler        *layer.Handler
-	CapabilityHandler   *capability.Handler
-	WorkflowHandler     *workflow.Handler
-	VerificationHandler *verification.Handler
+	IdentityHandler       *identity.Handler
+	OrganizationHandler   *organization.Handler
+	LayerHandler          *layer.Handler
+	CapabilityHandler     *capability.Handler
+	WorkflowHandler       *workflow.Handler
+	ObservabilityHandler  *observability.Handler
+	VerificationHandler   *verification.Handler
+	GovernanceHandler     *governance.Handler
 }
 
 func RegisterRoutes(r *chi.Mux, deps *Dependencies) {
@@ -43,6 +47,12 @@ func RegisterRoutes(r *chi.Mux, deps *Dependencies) {
 		}
 		if deps.VerificationHandler != nil {
 			deps.VerificationHandler.RegisterRoutes(r)
+		}
+		if deps.ObservabilityHandler != nil {
+			deps.ObservabilityHandler.RegisterRoutes(r)
+		}
+		if deps.GovernanceHandler != nil {
+			deps.GovernanceHandler.RegisterRoutes(r)
 		}
 	})
 }
