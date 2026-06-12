@@ -1,0 +1,134 @@
+package governance
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+)
+
+type Handler struct {
+	service *Service
+}
+
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
+}
+
+func (h *Handler) RegisterRoutes(r chi.Router) {
+	r.Post("/governance/permissions", h.createPermission)
+	r.Get("/governance/permissions", h.listPermissions)
+	r.Post("/governance/principles", h.createPrinciple)
+	r.Get("/governance/principles", h.listPrinciples)
+	r.Get("/governance/principles/{id}", h.getPrinciple)
+	r.Post("/governance/control-rules", h.createControlRule)
+	r.Get("/governance/control-rules", h.listControlRules)
+	r.Post("/governance/check", h.checkPermission)
+}
+
+func (h *Handler) createPermission(w http.ResponseWriter, r *http.Request) {
+	var input Permission
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		return
+	}
+	perm, err := h.service.CreatePermission(r.Context(), &input)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusCreated, perm)
+}
+
+func (h *Handler) listPermissions(w http.ResponseWriter, r *http.Request) {
+	perms, err := h.service.ListPermissions(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, perms)
+}
+
+func (h *Handler) createPrinciple(w http.ResponseWriter, r *http.Request) {
+	var input CreatePrincipleInput
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		return
+	}
+	prin, err := h.service.CreatePrinciple(r.Context(), input)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusCreated, prin)
+}
+
+func (h *Handler) listPrinciples(w http.ResponseWriter, r *http.Request) {
+	principles, err := h.service.ListPrinciples(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, principles)
+}
+
+func (h *Handler) getPrinciple(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	prin, err := h.service.GetPrinciple(r.Context(), id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "principle not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, prin)
+}
+
+func (h *Handler) createControlRule(w http.ResponseWriter, r *http.Request) {
+	var input CreateControlRuleInput
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		return
+	}
+	rule, err := h.service.CreateControlRule(r.Context(), input)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusCreated, rule)
+}
+
+func (h *Handler) listControlRules(w http.ResponseWriter, r *http.Request) {
+	rules, err := h.service.ListControlRules(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, rules)
+}
+
+func (h *Handler) checkPermission(w http.ResponseWriter, r *http.Request) {
+	var input PermissionCheckInput
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		return
+	}
+	result, err := h.service.CheckPermission(r.Context(), input)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		log.Printf("writeJSON error: %v", err)
+	}
+}
