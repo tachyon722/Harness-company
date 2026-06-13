@@ -78,6 +78,7 @@ func main() {
 
 	router := server.NewRouter(cfg.CorsOrigins)
 	gateway.RegisterRoutes(router, &gateway.Dependencies{
+		IdentityService:       identSvc,
 		IdentityHandler:       identHandler,
 		OrganizationHandler:   orgHandler,
 		LayerHandler:          layerHandler,

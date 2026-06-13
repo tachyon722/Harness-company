@@ -14,9 +14,11 @@ import (
 	"github.com/harness-org/backend/internal/domain/organization"
 	"github.com/harness-org/backend/internal/domain/verification"
 	"github.com/harness-org/backend/internal/domain/workflow"
+	"github.com/harness-org/backend/internal/pkg/middleware"
 )
 
 type Dependencies struct {
+	IdentityService       *identity.Service
 	IdentityHandler       *identity.Handler
 	OrganizationHandler   *organization.Handler
 	LayerHandler          *layer.Handler
@@ -32,33 +34,41 @@ func RegisterRoutes(r *chi.Mux, deps *Dependencies) {
 	if deps == nil {
 		panic("gateway.RegisterRoutes: deps must not be nil")
 	}
+
+	r.Get("/api/v1/health", healthCheck)
+
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Get("/health", healthCheck)
-		deps.IdentityHandler.RegisterRoutes(r)
-		if deps.OrganizationHandler != nil {
-			deps.OrganizationHandler.RegisterRoutes(r)
-		}
-		if deps.LayerHandler != nil {
-			deps.LayerHandler.RegisterRoutes(r)
-		}
-		if deps.CapabilityHandler != nil {
-			deps.CapabilityHandler.RegisterRoutes(r)
-		}
-		if deps.WorkflowHandler != nil {
-			deps.WorkflowHandler.RegisterRoutes(r)
-		}
-		if deps.VerificationHandler != nil {
-			deps.VerificationHandler.RegisterRoutes(r)
-		}
-		if deps.ObservabilityHandler != nil {
-			deps.ObservabilityHandler.RegisterRoutes(r)
-		}
-		if deps.GovernanceHandler != nil {
-			deps.GovernanceHandler.RegisterRoutes(r)
-		}
-		if deps.EvolutionHandler != nil {
-			deps.EvolutionHandler.RegisterRoutes(r)
-		}
+		deps.IdentityHandler.RegisterPublicRoutes(r)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.RequireAuth(deps.IdentityService))
+
+			deps.IdentityHandler.RegisterProtectedRoutes(r)
+			if deps.OrganizationHandler != nil {
+				deps.OrganizationHandler.RegisterRoutes(r)
+			}
+			if deps.LayerHandler != nil {
+				deps.LayerHandler.RegisterRoutes(r)
+			}
+			if deps.CapabilityHandler != nil {
+				deps.CapabilityHandler.RegisterRoutes(r)
+			}
+			if deps.WorkflowHandler != nil {
+				deps.WorkflowHandler.RegisterRoutes(r)
+			}
+			if deps.VerificationHandler != nil {
+				deps.VerificationHandler.RegisterRoutes(r)
+			}
+			if deps.ObservabilityHandler != nil {
+				deps.ObservabilityHandler.RegisterRoutes(r)
+			}
+			if deps.GovernanceHandler != nil {
+				deps.GovernanceHandler.RegisterRoutes(r)
+			}
+			if deps.EvolutionHandler != nil {
+				deps.EvolutionHandler.RegisterRoutes(r)
+			}
+		})
 	})
 }
 

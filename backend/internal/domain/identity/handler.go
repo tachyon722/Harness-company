@@ -18,11 +18,14 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) RegisterRoutes(r chi.Router) {
+func (h *Handler) RegisterPublicRoutes(r chi.Router) {
 	r.Post("/auth/login", h.login)
 	r.Post("/auth/register", h.register)
 	r.Post("/agents/register", h.registerAgent)
 	r.Post("/agents/auth", h.authenticateAgent)
+}
+
+func (h *Handler) RegisterProtectedRoutes(r chi.Router) {
 	r.Get("/roles", h.listRoles)
 }
 
